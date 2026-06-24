@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Who's on Top?</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">WHO'S ON <span>TOP?</span></a>
+  <div class="nav-links">
+    <a href="index.html"  class="nav-link active">Home</a>
+    <a href="lookup.html" class="nav-link">Lookup</a>
+  </div>
+</nav>
+
+<main class="page-wrap">
+  <div class="container">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><em>Leaderboard</em></h1>
+        <div class="page-tagline" id="page-tagline"></div>
+        <div class="page-meta">PC · Competitive · <span id="player-count">Loading…</span></div>
+      </div>
+    </div>
+
+    <details class="info-panel">
+      <summary>
+        <span class="info-q">?</span>
+        <span class="info-summary-text">What is <strong>Ranked Score</strong>?</span>
+        <span class="info-chev">▾</span>
+      </summary>
+      <div class="info-body">
+        <p>
+          <strong>Ranked Score</strong> is a single 0–1000 rating that blends every
+          meaningful per-10-minute stat into one number. It's built like an Elo system:
+          an <em>average</em> competitive player scores around <strong>500</strong>, and
+          each stat follows an S-curve — climbing higher always helps, but the gains
+          taper off the further you get from the pack. There's no hard cap, just a
+          ceiling that's tough to reach.
+        </p>
+        <p>It's designed to be <strong>role-neutral</strong> — damage and healing are pooled
+          together, so a support's healing counts just as much as a DPS's damage.</p>
+
+        <div class="info-weights">
+          <div class="iw"><span class="iw-bar" style="--w:100%"></span><span class="iw-label">Win Rate</span><span class="iw-val">260</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:77%"></span><span class="iw-label">Damage + Healing</span><span class="iw-val">200</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:38%"></span><span class="iw-label">Eliminations</span><span class="iw-val">100</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:35%"></span><span class="iw-label">Deaths (fewer is better)</span><span class="iw-val">90</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:31%"></span><span class="iw-label">Final Blows</span><span class="iw-val">80</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:27%"></span><span class="iw-label">Assists</span><span class="iw-val">70</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:23%"></span><span class="iw-label">Objective Time</span><span class="iw-val">60</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:19%"></span><span class="iw-label">Objective Kills</span><span class="iw-val">50</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:19%"></span><span class="iw-label">Solo Kills</span><span class="iw-val">50</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:15%"></span><span class="iw-label">Objective Contest</span><span class="iw-val">40</span></div>
+          <div class="iw"><span class="iw-bar" style="--w:38%"></span><span class="iw-label">K/D Ratio</span><span class="iw-val">100</span></div>
+        </div>
+
+        <div class="info-scale">
+          <span class="is-pill" style="color:var(--red)">&lt;400 Struggling</span>
+          <span class="is-pill" style="color:var(--accent)">400 Below avg</span>
+          <span class="is-pill" style="color:var(--warn)">500 Average</span>
+          <span class="is-pill" style="color:var(--cyan)">620 Above avg</span>
+          <span class="is-pill" style="color:var(--ok)">750+ Elite</span>
+        </div>
+      </div>
+    </details>
+
+    <div class="controls">
+      <div class="seg" id="view-seg">
+        <button data-val="overview" class="on">Overview</button>
+        <button data-val="allstats">All Stats</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div id="sort-controls">
+        <div class="seg" id="sort-seg">
+          <button data-val="score"    class="on">Ranked Score</button>
+          <button data-val="rank">Rank</button>
+          <button data-val="win_rate">Win Rate</button>
+          <button data-val="kd">K/D</button>
+        </div>
+      </div>
+
+      <button class="btn btn-ghost btn-sm" id="refresh-btn">↺ Refresh</button>
+    </div>
+
+    <div id="lb-container"></div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  Data via <a href="https://overfast-api.tekrop.fr" target="_blank">OverFast API</a>
+  &nbsp;·&nbsp; Click any row to view full player stats
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/leaderboard.js"></script>
+</body>
+</html>

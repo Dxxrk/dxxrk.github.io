@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lookup — Who's on Top?</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">WHO'S ON <span>TOP?</span></a>
+  <div class="nav-links">
+    <a href="index.html"  class="nav-link">Home</a>
+    <a href="lookup.html" class="nav-link active">Lookup</a>
+  </div>
+</nav>
+
+<main class="page-wrap">
+  <div class="container" style="max-width:600px">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><em>Player Lookup</em></h1>
+        <div class="page-meta">Search any public Overwatch 2 profile</div>
+      </div>
+    </div>
+
+    <form class="search-wrap" id="lookup-form" style="margin-bottom:12px">
+      <input
+        id="lookup-input"
+        type="text"
+        placeholder="BattleTag-1234  (replace # with -)"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button type="submit">Search</button>
+    </form>
+
+    <p class="text-xs text-muted" style="margin-bottom:24px">
+      Profile must be set to <strong style="color:var(--txt-2)">Public</strong> in-game — Options → Social → Career Profile
+    </p>
+
+    <div id="lookup-results"></div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  Data via <a href="https://overfast-api.tekrop.fr" target="_blank">OverFast API</a>
+  &nbsp;·&nbsp; Stats update when a player exits the game
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+function goToPlayer(id) {
+  window.location.href = `player.html?id=${encodeURIComponent(id)}`;
+}
+
+document.getElementById('lookup-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const raw = document.getElementById('lookup-input').value.trim();
+  if (!raw) return;
+
+  const results = document.getElementById('lookup-results');
+
+  // Looks like a full battletag — navigate directly
+  if (/-.+\d/.test(raw)) {
+    goToPlayer(raw.replace('#', '-'));
+    return;
+  }
+
+  results.innerHTML = `<div class="skeleton" style="height:56px;border-radius:8px"></div>`;
+
+  try {
+    const data = await API.search(raw);
+    const players = Array.isArray(data) ? data : data?.results ?? [];
+
+    if (!players.length) {
+      results.innerHTML = `
+        <div class="error-state">
+          <span class="error-icon">⚠</span>
+          <span>No players found for "${raw}". Try entering the full BattleTag-1234.</span>
+        </div>`;
+      return;
+    }
+
+    results.innerHTML = players.slice(0, 8).map(p => {
+      const id   = p.player_id ?? p.id ?? p.battletag?.replace('#', '-');
+      const name = p.name ?? p.username ?? id;
+      const av   = p.avatar;
+      return `
+        <div class="card player-result-card" onclick="goToPlayer('${id}')">
+          ${av
+            ? `<img src="${av}" class="plyr-avatar" alt="${name}">`
+            : `<div class="plyr-avatar-ph">${name.charAt(0)}</div>`}
+          <div>
+            <div class="plyr-name">${name}</div>
+            <div class="plyr-id">${id}</div>
+          </div>
+          <span style="margin-left:auto;color:var(--txt-3)">→</span>
+        </div>`;
+    }).join('');
+  } catch {
+    goToPlayer(raw.replace('#', '-'));
+  }
+});
+</script>
+</body>
+</html>
