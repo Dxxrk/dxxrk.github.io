@@ -213,6 +213,48 @@ function best_rank(competitive) {
   return best;
 }
 
+// Hero (API kebab key) → role. Used to figure out a player's most-played role.
+const HERO_ROLE = {
+  // Tank
+  'dva':'tank','doomfist':'tank','junker-queen':'tank','mauga':'tank','orisa':'tank',
+  'ramattra':'tank','reinhardt':'tank','roadhog':'tank','sigma':'tank','winston':'tank',
+  'wrecking-ball':'tank','zarya':'tank','hazard':'tank',
+  // Damage
+  'ashe':'damage','bastion':'damage','cassidy':'damage','echo':'damage','genji':'damage',
+  'hanzo':'damage','junkrat':'damage','mei':'damage','pharah':'damage','reaper':'damage',
+  'sojourn':'damage','soldier-76':'damage','sombra':'damage','symmetra':'damage',
+  'torbjorn':'damage','tracer':'damage','venture':'damage','widowmaker':'damage','freja':'damage',
+  // Support
+  'ana':'support','baptiste':'support','brigitte':'support','illari':'support','juno':'support',
+  'kiriko':'support','lifeweaver':'support','lucio':'support','mercy':'support','moira':'support',
+  'zenyatta':'support',
+};
+
+// Given a {heroKey: seconds} map, return the role with the most total playtime.
+function main_role(timemap) {
+  const totals = { tank: 0, damage: 0, support: 0 };
+  for (const [hero, secs] of Object.entries(timemap || {})) {
+    const role = HERO_ROLE[hero];
+    if (role) totals[role] += secs;
+  }
+  let top = null, max = 0;
+  for (const [role, t] of Object.entries(totals)) {
+    if (t > max) { max = t; top = role; }
+  }
+  return top; // null if no recognised hero playtime
+}
+
+// Rank to show on the leaderboard: the player's MOST-PLAYED role's rank.
+// Falls back to their best rank if that role isn't placed / no playtime data.
+function most_played_role_rank(timemap, competitive) {
+  if (!competitive) return null;
+  const role = main_role(timemap);
+  if (role && competitive[role]?.division) {
+    return { ...competitive[role], role };
+  }
+  return best_rank(competitive);
+}
+
 function rank_class(division) {
   if (!division) return 'rank-unranked';
   return `rank-${division.toLowerCase()}`;

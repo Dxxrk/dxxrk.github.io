@@ -22,7 +22,7 @@ let state = {
 // viewing a player's profile) renders instantly — no spinner, no stagger, no
 // cascade. Lives in sessionStorage so it clears when the tab closes; the
 // Refresh button also wipes it via API.clearCache().
-const LB_CACHE_KEY = 'owstats:lb-snapshot';
+const LB_CACHE_KEY = 'owstats:lb-snapshot-v2';
 const LB_CACHE_TTL = 15 * 60 * 1000; // 15 min, then a return visit refetches
 
 function loadSnapshot() {
@@ -43,6 +43,7 @@ function saveSnapshot() {
     // the flattened all-heroes stats, and dropping it keeps us well under quota.
     const slim = state.players.map(p => ({
       cfg: p.cfg, summary: p.summary, flat: p.flat,
+      _roleRank: p._roleRank,
       _wr: p._wr, _kd: p._kd, _score: p._score, err: p.err,
     }));
     sessionStorage.setItem(LB_CACHE_KEY, JSON.stringify({
@@ -140,14 +141,21 @@ async function fetchAll() {
 }
 
 async function fetchPlayer(cfg) {
+  const compKey = CONFIG.platform === 'pc' ? 'pc' : 'console';
   const [summary, rawStats] = await Promise.all([
     API.summary(cfg.id),
     API.stats(cfg.id, CONFIG.platform, CONFIG.gamemode),
   ]);
   const careerBlocks = parse_career(rawStats, CONFIG.platform, CONFIG.gamemode);
   const flat = careerBlocks ? flatten_hero(careerBlocks['all-heroes']) : {};
+
+  // Rank to display = the player's most-played role's rank (PC competitive)
+  const timemap  = hero_time_map(careerBlocks, CONFIG.platform, CONFIG.gamemode);
+  const roleRank = most_played_role_rank(timemap, summary?.competitive?.[compKey]);
+
   return {
     cfg, summary, careerBlocks, flat,
+    _roleRank: roleRank,
     _wr: win_rate(flat), _kd: kd(flat), _score: ranked_score(flat),
   };
 }
@@ -180,8 +188,11 @@ function buildColumns() {
 }
 
 // ── Rank sort value ───────────────────────────────────────────────────────────
+// Sorts by the same rank shown in the table (most-played role).
 function rankSortVal(p) {
-  if (p.err || !p.summary) return 999;
+  if (p.err) return 999;
+  if (p._roleRank) return _rankVal(p._roleRank);
+  if (!p.summary) return 999;
   const compKey = CONFIG.platform === 'pc' ? 'pc' : 'console';
   return _rankVal(best_rank(p.summary?.competitive?.[compKey]));
 }
@@ -297,8 +308,7 @@ function renderOverview() {
   const rowHtmls = sorted.map((p, i) => {
     if (p.err) return errRow(i + 1, p, 10);
 
-    const compData   = p.summary?.competitive?.[compKey];
-    const best       = best_rank(compData);
+    const best       = p._roleRank ?? best_rank(p.summary?.competitive?.[compKey]);
     const label      = p.cfg.label || p.cfg.id;
     const scoreClr   = score_color(p._score);
     const dmg_per10  = stat_val(p.flat, 'average', 'hero_damage_done_avg_per_10_min');
@@ -397,7 +407,7 @@ function renderAllStats() {
   const rowHtmls = sorted.map((p, i) => {
     if (p.err) return errRow(i + 1, p, totalCols);
 
-    const best  = best_rank(p.summary?.competitive?.[compKey]);
+    const best  = p._roleRank ?? best_rank(p.summary?.competitive?.[compKey]);
     const label = p.cfg.label || p.cfg.id;
 
     let tds = `
