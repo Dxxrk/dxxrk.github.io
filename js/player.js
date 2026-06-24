@@ -20,7 +20,7 @@ async function initPlayer() {
   }
 
   pState.playerId = id;
-  document.title = `${fmt_battletag(id)} — Who's on Top?`;
+  document.title = `${fmt_battletag(id)} · Who's on Top?`;
 
   showLoading();
 
@@ -34,7 +34,7 @@ async function initPlayer() {
     pState.rawStats  = rawStats;
     pState.careerBlocks = parse_career(rawStats, pState.platform, pState.gamemode);
 
-    document.title = `${summary.username ?? fmt_battletag(id)} — Who's on Top?`;
+    document.title = `${summary.username ?? fmt_battletag(id)} · Who's on Top?`;
     renderProfile();
   } catch (err) {
     showPageError(`Failed to load player: ${err.message}`);
@@ -152,7 +152,7 @@ function renderProfile() {
           </div>
           <div class="profile-meta-col">
             ${playerScore != null ? `
-              <div class="score-medallion" title="Ranked Score — ${score_tier_label(playerScore)}">
+              <div class="score-medallion" title="Ranked Score: ${score_tier_label(playerScore)}">
                 <div class="score-ring" style="--pct:${(playerScore/1000).toFixed(3)};--clr:${score_color(playerScore)}">
                   <div class="score-ring-inner">
                     <div class="score-num" style="color:${score_color(playerScore)}">${playerScore}</div>
@@ -184,14 +184,14 @@ function renderProfile() {
         </div>` : ''}
 
       <div class="stats-grid mt-24" id="overview-tiles">
-        ${tile('Win Rate',   wr != null  ? fmt_pct(wr)              : '—', `${gamesWon}W / ${gamesPlayed - gamesWon}L`, wr != null ? (wr >= 55 ? 'ok' : wr < 45 ? 'bad' : 'accent') : '')}
-        ${tile('K/D',        kdV != null  ? fmt_float(kdV, 2)        : '—', 'Final Blows / Deaths')}
-        ${tile('Eliminations', elims != null ? fmt_num(elims)        : '—', 'Career total')}
-        ${tile('Damage Done',  dmg != null   ? fmt_num(dmg)          : '—', 'Career total')}
-        ${tile('Healing Done', healing != null ? fmt_num(healing)    : '—', 'Career total')}
-        ${tile('Time Played',  timePlayed != null ? fmt_time(timePlayed) : '—', 'Career total')}
-        ${tile('Deaths',       deaths != null ? fmt_num(deaths)      : '—', 'Career total')}
-        ${tile('Games Played', gamesPlayed ? fmt_num(gamesPlayed)    : '—', 'This season')}
+        ${tile('Win Rate',   wr != null  ? fmt_pct(wr)              : '–', `${gamesWon}W / ${gamesPlayed - gamesWon}L`, wr != null ? (wr >= 55 ? 'ok' : wr < 45 ? 'bad' : 'accent') : '')}
+        ${tile('K/D',        kdV != null  ? fmt_float(kdV, 2)        : '–', 'Final Blows / Deaths')}
+        ${tile('Eliminations', elims != null ? fmt_num(elims)        : '–', 'Career total')}
+        ${tile('Damage Done',  dmg != null   ? fmt_num(dmg)          : '–', 'Career total')}
+        ${tile('Healing Done', healing != null ? fmt_num(healing)    : '–', 'Career total')}
+        ${tile('Time Played',  timePlayed != null ? fmt_time(timePlayed) : '–', 'Career total')}
+        ${tile('Deaths',       deaths != null ? fmt_num(deaths)      : '–', 'Career total')}
+        ${tile('Games Played', gamesPlayed ? fmt_num(gamesPlayed)    : '–', 'This season')}
       </div>
 
       ${pState.careerBlocks ? `

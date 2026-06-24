@@ -15,10 +15,10 @@ async function _fetch(url) {
 
   const res = await fetch(url);
   if (!res.ok) {
-    if (res.status === 404) throw new Error('Player not found — profile may be private or battletag incorrect');
+    if (res.status === 404) throw new Error('Player not found. Profile may be private or battletag incorrect');
     if (res.status === 422) throw new Error('Invalid player ID format');
-    if (res.status === 429) throw new Error('Rate limited — please wait a moment');
-    if (res.status === 500) throw new Error('OverFast API error — try again shortly');
+    if (res.status === 429) throw new Error('Rate limited. Please wait a moment');
+    if (res.status === 500) throw new Error('OverFast API error. Try again shortly');
     throw new Error(`HTTP ${res.status}`);
   }
 

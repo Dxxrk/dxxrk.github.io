@@ -1,7 +1,7 @@
 // ── Rating curve ─────────────────────────────────────────────────────────────
 // Logistic S-curve: average player (value = midpoint) returns exactly 0.5.
 // Multiply by a weight to get a component's point contribution.
-// There's no hard cap — performance above midpoint always scores higher,
+// There's no hard cap; performance above midpoint always scores higher,
 // but gains diminish asymptotically (like a real Elo system).
 function elo_curve(value, midpoint, scale) {
   return 1 / (1 + Math.exp(-(value - midpoint) / scale));
@@ -10,7 +10,7 @@ function elo_curve(value, midpoint, scale) {
 // ── Ranked Score ─────────────────────────────────────────────────────────────
 // Elo-style logistic rating using every meaningful per-10m stat the API exposes.
 // Each stat runs through a sigmoid curve: average performance → 0.5 of that
-// component's weight. No hard caps — better always scores higher, but gains
+// component's weight. No hard caps; better always scores higher, but gains
 // diminish asymptotically. All weights sum to 1000, so an average player in
 // every category scores exactly 500.
 //
@@ -32,14 +32,40 @@ const SCORE_COMPONENTS = [
 ];
 // Weights sum to 740; Win Rate adds 260 → 1000 total.
 
+// Win rate shrunk toward 50% based on sample size (Bayesian-style smoothing).
+// We add "phantom" games at a 50% win rate so a player with few real games is
+// pulled toward average (low confidence). The phantom count tapers off linearly
+// and hits zero at WR_FULL_CREDIT_AT games, so from 50 games on you get full,
+// unshrunk credit for your real win rate. Examples:
+//   2 wins / 3 games  (66%) becomes ~52.9%   (heavily pulled toward average)
+//   16 wins / 25      (64%) becomes ~62.3%
+//   33 wins / 50      (66%) becomes  66%      (full credit, cap reached)
+//   66 wins / 100     (66%) becomes  66%
+const WR_PRIOR_GAMES    = 15; // shrinkage strength at 0 games
+const WR_FULL_CREDIT_AT = 50; // games needed for full (unshrunk) win rate
+function win_rate_shrunk(flat) {
+  const played = stat_val(flat, 'game', 'games_played');
+  if (!played) return null;
+  let wins = stat_val(flat, 'game', 'games_won');
+  if (wins == null) {
+    const lost = stat_val(flat, 'game', 'games_lost');
+    if (lost == null) return null;
+    wins = played - lost;
+  }
+  const prior = WR_PRIOR_GAMES * Math.max(0, (WR_FULL_CREDIT_AT - played) / WR_FULL_CREDIT_AT);
+  if (prior <= 0) return (wins / played) * 100; // full credit past the cap
+  return (wins + 0.5 * prior) / (played + prior) * 100;
+}
+
 function ranked_score(flat) {
-  const wr         = win_rate(flat);
+  const wrAdj      = win_rate_shrunk(flat);
   const dmg_per10  = stat_val(flat, 'average', 'hero_damage_done_avg_per_10_min') ?? 0;
   const heal_per10 = stat_val(flat, 'average', 'healing_done_avg_per_10_min')     ?? 0;
 
-  if (wr == null) return null;
+  if (wrAdj == null) return null;
 
-  let total = elo_curve(wr, 50, 7) * 260; // Win Rate — highest single weight
+  // Win Rate (sample-size adjusted) is the highest single weight.
+  let total = elo_curve(wrAdj, 50, 7) * 260;
 
   for (const [key, mid, scale, weight, invert] of SCORE_COMPONENTS) {
     const v = key === '__output'
@@ -74,7 +100,7 @@ function score_tier_label(score) {
 // ── Formatting ────────────────────────────────────────────────────────────────
 
 function fmt_time(seconds) {
-  if (seconds == null || isNaN(seconds)) return '—';
+  if (seconds == null || isNaN(seconds)) return '–';
   const s = Math.floor(seconds);
   if (s < 60) return `${s}s`;
   const h = Math.floor(s / 3600);
@@ -85,29 +111,29 @@ function fmt_time(seconds) {
 }
 
 function fmt_num(n) {
-  if (n == null || isNaN(n)) return '—';
+  if (n == null || isNaN(n)) return '–';
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
   if (n >= 10_000)    return (n / 1_000).toFixed(0) + 'K';
   return (+n).toLocaleString();
 }
 
 function fmt_full(n) {
-  if (n == null || isNaN(n)) return '—';
+  if (n == null || isNaN(n)) return '–';
   return Math.round(n).toLocaleString();
 }
 
 function fmt_float(n, dec = 2) {
-  if (n == null || isNaN(n)) return '—';
+  if (n == null || isNaN(n)) return '–';
   return (+n).toFixed(dec);
 }
 
 function fmt_pct(n, dec = 1) {
-  if (n == null || isNaN(n)) return '—';
+  if (n == null || isNaN(n)) return '–';
   return `${(+n).toFixed(dec)}%`;
 }
 
 function fmt_stat(key, value) {
-  if (value == null) return '—';
+  if (value == null) return '–';
   if (is_time_key(key)) return fmt_time(value);
   if (is_pct_key(key))  return fmt_pct(value);
   if (Number.isInteger(value)) return fmt_num(value);

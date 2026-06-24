@@ -19,10 +19,10 @@ let state = {
 
 // ── Snapshot cache ──────────────────────────────────────────────────────────
 // Stores the fully-computed leaderboard so returning to this page (e.g. after
-// viewing a player's profile) renders instantly — no spinner, no stagger, no
+// viewing a player's profile) renders instantly: no spinner, no stagger, no
 // cascade. Lives in sessionStorage so it clears when the tab closes; the
 // Refresh button also wipes it via API.clearCache().
-const LB_CACHE_KEY = 'owstats:lb-snapshot-v2';
+const LB_CACHE_KEY = 'owstats:lb-snapshot-v4';
 const LB_CACHE_TTL = 15 * 60 * 1000; // 15 min, then a return visit refetches
 
 function loadSnapshot() {
@@ -39,7 +39,7 @@ function loadSnapshot() {
 
 function saveSnapshot() {
   try {
-    // Strip careerBlocks (the full per-hero dump) — the leaderboard only needs
+    // Strip careerBlocks (the full per-hero dump); the leaderboard only needs
     // the flattened all-heroes stats, and dropping it keeps us well under quota.
     const slim = state.players.map(p => ({
       cfg: p.cfg, summary: p.summary, flat: p.flat,
@@ -72,7 +72,7 @@ async function initLeaderboard() {
     return;
   }
 
-  // Cold load — table starts blank, no rows painted until ALL data is in and we
+  // Cold load: table starts blank, no rows painted until ALL data is in and we
   // know the final ranked-score order. Then rows cascade in, best-first.
   state.players = [];
   renderLoading();
@@ -117,7 +117,7 @@ async function fetchAll() {
   setLoadingProgress(0, total);
 
   // Fetch every player (summary + career) staggered to respect OverFast's
-  // per-second rate limit. We deliberately do NOT render rows here — the table
+  // per-second rate limit. We deliberately do NOT render rows here, so the table
   // stays blank until everything resolves so we can paint in true sorted order.
   const results = await Promise.all(
     CONFIG.players.map((cfg, i) =>
@@ -320,13 +320,13 @@ function renderOverview() {
       ${posCell(i)}
       <td class="left">${playerCell(p.summary?.avatar, label, p.cfg.id, i === 0)}</td>
       <td class="left">${rank_badge_html(best)}</td>
-      <td class="num" style="color:${scoreClr};font-weight:700;font-size:15px">${p._score != null ? `<span class="js-countup" data-val="${p._score}">${p._score}</span>` : '—'}</td>
-      <td class="num ${wr_class(p._wr)}">${p._wr != null ? fmt_pct(p._wr) : '—'}</td>
-      <td class="num">${p._kd != null ? fmt_float(p._kd, 2) : '—'}</td>
-      <td class="num">${dmg_per10  != null ? fmt_full(dmg_per10)  : '—'}</td>
-      <td class="num">${heal_per10 != null ? fmt_full(heal_per10) : '—'}</td>
-      <td class="num">${elim_per10 != null ? fmt_float(elim_per10, 1) : '—'}</td>
-      <td class="num">${games != null ? fmt_num(games) : '—'}</td>
+      <td class="num" style="color:${scoreClr};font-weight:700;font-size:15px">${p._score != null ? `<span class="js-countup" data-val="${p._score}">${p._score}</span>` : '–'}</td>
+      <td class="num ${wr_class(p._wr)}">${p._wr != null ? fmt_pct(p._wr) : '–'}</td>
+      <td class="num">${p._kd != null ? fmt_float(p._kd, 2) : '–'}</td>
+      <td class="num">${dmg_per10  != null ? fmt_full(dmg_per10)  : '–'}</td>
+      <td class="num">${heal_per10 != null ? fmt_full(heal_per10) : '–'}</td>
+      <td class="num">${elim_per10 != null ? fmt_float(elim_per10, 1) : '–'}</td>
+      <td class="num">${games != null ? fmt_num(games) : '–'}</td>
     </tr>`;
   });
 

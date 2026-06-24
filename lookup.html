@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lookup — Who's on Top?</title>
+  <title>Lookup · Who's on Top?</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -38,7 +38,7 @@
     </form>
 
     <p class="text-xs text-muted" style="margin-bottom:24px">
-      Profile must be set to <strong style="color:var(--txt-2)">Public</strong> in-game — Options → Social → Career Profile
+      Profile must be set to <strong style="color:var(--txt-2)">Public</strong> in-game · Options → Social → Career Profile
     </p>
 
     <div id="lookup-results"></div>
@@ -66,7 +66,7 @@ document.getElementById('lookup-form').addEventListener('submit', async e => {
 
   const results = document.getElementById('lookup-results');
 
-  // Looks like a full battletag — navigate directly
+  // Looks like a full battletag, navigate directly
   if (/-.+\d/.test(raw)) {
     goToPlayer(raw.replace('#', '-'));
     return;
